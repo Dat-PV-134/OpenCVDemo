@@ -35,7 +35,8 @@ class MainActivity : AppCompatActivity() {
         val grayBitmap = createBitmap(srcBitmap.width, srcBitmap.height)
 
         // Convert ảnh sang grayscale
-        nativeLibInstance.gray(srcBitmap, grayBitmap)
+//        nativeLibInstance.gray(srcBitmap, grayBitmap)
+        nativeLibInstance.test(srcBitmap, grayBitmap)
 
         // Set ảnh grayscale lên ImageView
         binding.imgTest.setImageBitmap(grayBitmap)

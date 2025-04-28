@@ -8,6 +8,8 @@ class NativeLib {
 
     external fun gray(src: Bitmap, dst: Bitmap)
 
+    external fun test(src: Bitmap, dst: Bitmap)
+
     companion object {
         // Used to load the 'nativelib' library on application startup.
         init {

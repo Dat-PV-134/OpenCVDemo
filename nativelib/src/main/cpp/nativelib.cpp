@@ -1,8 +1,10 @@
 #include <jni.h>
 #include <string>
 #include <android/bitmap.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <android/log.h>
 
 using namespace cv;
@@ -51,4 +53,43 @@ Java_com_rekoj134_nativelib_NativeLib_gray(
     AndroidBitmap_unlockPixels(env, srcBitmap);
     AndroidBitmap_unlockPixels(env, dstBitmap);
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_rekoj134_nativelib_NativeLib_test(
+        JNIEnv *env, jobject /* this */,
+        jobject srcBitmap, jobject dstBitmap) {
+    AndroidBitmapInfo info;
+    void* srcPixels;
+    void* dstPixels;
+
+    // Lấy thông tin bitmap
+    if (AndroidBitmap_getInfo(env, srcBitmap, &info) < 0) return;
+    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) return;
+
+    // Lock pixels
+    if (AndroidBitmap_lockPixels(env, srcBitmap, &srcPixels) < 0) return;
+    if (AndroidBitmap_lockPixels(env, dstBitmap, &dstPixels) < 0) {
+        AndroidBitmap_unlockPixels(env, srcBitmap);
+        return;
+    }
+
+    // Tạo Mat từ src
+    Mat srcMat(info.height, info.width, CV_8UC4, srcPixels);
+    Mat resized_mat;
+    resize(srcMat, resized_mat, cv::Size(info.width/2, info.height));
+
+    Mat grayMat;
+    cvtColor(resized_mat, grayMat, COLOR_RGBA2GRAY);
+
+    // Chuyển về lại RGBA để hiển thị đúng trên Android
+    Mat dstMat(resized_mat.size(), CV_8UC4, dstPixels);
+    cvtColor(grayMat, dstMat, COLOR_GRAY2RGBA);
+
+    // Unlock pixels
+    AndroidBitmap_unlockPixels(env, srcBitmap);
+    AndroidBitmap_unlockPixels(env, dstBitmap);
+}
+
+
 
