@@ -76,15 +76,16 @@ Java_com_rekoj134_nativelib_NativeLib_test(
 
     // Tạo Mat từ src
     Mat srcMat(info.height, info.width, CV_8UC4, srcPixels);
-    Mat resized_mat;
-    resize(srcMat, resized_mat, cv::Size(info.width/2, info.height));
-
     Mat grayMat;
-    cvtColor(resized_mat, grayMat, COLOR_RGBA2GRAY);
+    cvtColor(srcMat, grayMat, COLOR_RGBA2GRAY);
+
+    // Blur
+    Mat blurMat;
+    GaussianBlur(grayMat, blurMat, Size(111, 111), 0);
 
     // Chuyển về lại RGBA để hiển thị đúng trên Android
-    Mat dstMat(resized_mat.size(), CV_8UC4, dstPixels);
-    cvtColor(grayMat, dstMat, COLOR_GRAY2RGBA);
+    Mat dstMat(blurMat.size(), CV_8UC4, dstPixels);
+    cvtColor(blurMat, dstMat, COLOR_GRAY2RGBA);
 
     // Unlock pixels
     AndroidBitmap_unlockPixels(env, srcBitmap);
