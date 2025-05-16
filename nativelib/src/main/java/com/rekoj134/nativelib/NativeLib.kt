@@ -10,6 +10,10 @@ class NativeLib {
 
     external fun test(src: Bitmap, dst: Bitmap)
 
+    external fun enhanceImage(src: Bitmap, dst: Bitmap)
+
+    external fun resizeImage(src: Bitmap, dst: Bitmap, targetWidth: Int, targetHeight: Int)
+
     companion object {
         // Used to load the 'nativelib' library on application startup.
         init {

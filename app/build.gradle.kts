@@ -36,10 +36,24 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    aaptOptions {
+        noCompress("tflite")
+    }
 }
 
 dependencies {
     implementation(project(":nativelib"))
+
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation("com.google.firebase:firebase-analytics")
+
+    implementation ("com.google.mediapipe:tasks-vision:0.20230731")
+    implementation ("org.tensorflow:tensorflow-lite-gpu:2.13.0")
+    implementation ("org.tensorflow:tensorflow-lite:2.13.0")
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation ("org.tensorflow:tensorflow-lite-select-tf-ops:2.13.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

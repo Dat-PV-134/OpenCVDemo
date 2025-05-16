@@ -1,44 +1,81 @@
 package com.rekoj134.opencvdemo
 
+import ImageClarityEnhancer
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.rekoj134.nativelib.NativeLib
-import com.rekoj134.opencvdemo.databinding.ActivityMainBinding
-import androidx.core.graphics.createBitmap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var imageViewInput: ImageView
+    private lateinit var imageViewOutput: ImageView
+    private lateinit var progressBar: ProgressBar
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val imagePicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { processImage(it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        setContentView(R.layout.activity_main)
+
+        imageViewInput = findViewById(R.id.imageViewDefault)
+        imageViewOutput = findViewById(R.id.imageViewSegmented)
+        progressBar = findViewById(R.id.progressBar)
+
+        // Click để chọn ảnh
+        imageViewInput.setOnClickListener {
+            imagePicker.launch("image/*")
         }
 
-        val nativeLibInstance = NativeLib()
-        binding.tvHello.text = nativeLibInstance.stringFromJNI()
+        Toast.makeText(this, "Nhấn vào ảnh để chọn từ thư viện", Toast.LENGTH_LONG).show()
+    }
 
-        // Load ảnh từ drawable
-        val srcBitmap = BitmapFactory.decodeResource(resources, R.drawable.img_test)
+    private fun processImage(uri: Uri) {
+        progressBar.visibility = View.VISIBLE
 
-        // Tạo Bitmap output
-        val grayBitmap = createBitmap(srcBitmap.width, srcBitmap.height)
+        coroutineScope.launch {
+            val inputStream = contentResolver.openInputStream(uri)
+            val srcBitmap = BitmapFactory.decodeStream(inputStream)
 
-        // Convert ảnh sang grayscale
-//        nativeLibInstance.gray(srcBitmap, grayBitmap)
-        nativeLibInstance.test(srcBitmap, grayBitmap)
+//            val dstBitmap = createBitmap(srcBitmap.width, srcBitmap.height)
 
-        // Set ảnh grayscale lên ImageView
-        binding.imgTest.setImageBitmap(grayBitmap)
+            // Gọi hàm native xử lý
+//            nativeLib.enhanceImage(srcBitmap, dstBitmap)
+
+            imageViewInput.setImageBitmap(srcBitmap)
+
+            val enhancer = ImageClarityEnhancer(this@MainActivity)
+            val outputBitmap = withContext(Dispatchers.IO) {
+                enhancer.enhanceClarity(srcBitmap)
+            }
+
+            imageViewOutput.setImageBitmap(outputBitmap)
+            progressBar.visibility = View.GONE
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineScope.cancel()
     }
 }
+
+
